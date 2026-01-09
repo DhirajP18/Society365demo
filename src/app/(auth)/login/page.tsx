@@ -81,7 +81,7 @@ export default function LoginPage() {
       </div>
 
       {/* RIGHT SIDE – LOGIN (UNCHANGED) */}
-      <div className="w-full lg:w-[52%] flex items-center justify-center p-4">
+      <div className="w-full lg:w-[52%] flex items-center justify-center p-3">
         <Card className="w-full max-w-md h-auto bg-white backdrop-blur-xl shadow-2xl border-0 rounded-2xl">
           <CardContent className="pt-0.5 pb-5 px-8">
 
