@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
+import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +11,34 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 
+/* ============================
+   TYPES
+============================ */
+
+interface ApiErrorResponse {
+  resMsg?: string;
+}
+
+interface SignupForm {
+  name: string;
+  emailId: string;
+  mobile: string;
+  floor: string;
+  flat: string;
+  password: string;
+  confirmPassword: string;
+}
+
+type FormErrors = Partial<Record<keyof SignupForm, string>>;
+
+/* ============================
+   PAGE
+============================ */
+
 export default function SignupPage() {
   const router = useRouter();
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<SignupForm>({
     name: "",
     emailId: "",
     mobile: "",
@@ -23,13 +48,13 @@ export default function SignupPage() {
     confirmPassword: "",
   });
 
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
   /* ---------------- VALIDATION ---------------- */
-  const validate = () => {
-    const e: any = {};
+  const validate = (): boolean => {
+    const e: FormErrors = {};
 
     if (!form.name.trim()) e.name = "Full name required";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailId))
@@ -45,18 +70,23 @@ export default function SignupPage() {
     return Object.keys(e).length === 0;
   };
 
-  const handleChange = (e: any) => {
+  /* ---------------- INPUT CHANGE ---------------- */
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
     if (name === "mobile" && !/^\d*$/.test(value)) return;
-    setForm({ ...form, [name]: value });
-    setErrors({ ...errors, [name]: "" });
+
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const handleSignup = async (e: any) => {
+  /* ---------------- SUBMIT ---------------- */
+  const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validate()) return;
 
     setLoading(true);
+
     try {
       const res = await api.post("/UserMaster/Insert", {
         Name: form.name,
@@ -67,14 +97,20 @@ export default function SignupPage() {
         Flat: form.flat,
       });
 
-      if (res.data.isSuccess) {
+      if (res.data?.isSuccess) {
         toast.success("Registration Successful", {
           description: "Waiting for admin approval",
         });
         setTimeout(() => router.push("/login"), 2000);
-      } else toast.error(res.data.resMsg);
-    } catch {
-      toast.error("Signup failed");
+      } else {
+        toast.error(res.data?.resMsg ?? "Signup failed");
+      }
+    } catch (err: unknown) {
+      if (axios.isAxiosError<ApiErrorResponse>(err)) {
+        toast.error(err.response?.data?.resMsg ?? "Signup failed");
+      } else {
+        toast.error("Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
@@ -82,17 +118,8 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 px-3 sm:px-6">
-
-      {/* Autofill fix */}
-      <style jsx global>{`
-        input:-webkit-autofill {
-          -webkit-box-shadow: 0 0 0 1000px white inset;
-        }
-      `}</style>
-
       <Card className="w-full max-w-md sm:max-w-2xl lg:max-w-3xl bg-white/80 backdrop-blur-xl shadow-2xl rounded-2xl border-0">
         <CardContent className="p-4 sm:p-6 lg:p-8">
-
           {/* HEADER */}
           <div className="text-center mb-6">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-800">
@@ -153,7 +180,7 @@ export default function SignupPage() {
               value={form.password}
               onChange={handleChange}
               show={showPwd}
-              toggle={() => setShowPwd(!showPwd)}
+              toggle={() => setShowPwd((v) => !v)}
               error={errors.password}
             />
 
@@ -163,11 +190,10 @@ export default function SignupPage() {
               value={form.confirmPassword}
               onChange={handleChange}
               show={showPwd}
-              toggle={() => setShowPwd(!showPwd)}
+              toggle={() => setShowPwd((v) => !v)}
               error={errors.confirmPassword}
             />
 
-            {/* BUTTON */}
             <div className="sm:col-span-2 pt-2">
               <Button
                 disabled={loading}
@@ -178,7 +204,6 @@ export default function SignupPage() {
             </div>
           </form>
 
-          {/* FOOTER */}
           <p className="text-center text-xs sm:text-sm text-gray-600 mt-5">
             Already registered?{" "}
             <span
@@ -194,8 +219,17 @@ export default function SignupPage() {
   );
 }
 
-/* ---------------- FLOATING INPUT ---------------- */
-function FloatingInput({ label, error, ...props }: any) {
+/* ============================
+   FLOATING INPUT
+============================ */
+
+interface FloatingInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  error?: string;
+}
+
+function FloatingInput({ label, error, ...props }: FloatingInputProps) {
   const [focus, setFocus] = useState(false);
 
   return (
@@ -222,14 +256,25 @@ function FloatingInput({ label, error, ...props }: any) {
   );
 }
 
-/* ---------------- PASSWORD INPUT ---------------- */
+/* ============================
+   PASSWORD INPUT
+============================ */
+
+interface PasswordInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  show: boolean;
+  toggle: () => void;
+  error?: string;
+}
+
 function PasswordInput({
   label,
   show,
   toggle,
   error,
   ...props
-}: any) {
+}: PasswordInputProps) {
   const [focus, setFocus] = useState(false);
 
   return (

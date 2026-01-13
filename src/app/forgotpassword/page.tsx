@@ -10,7 +10,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 
+/* ---------------- TYPES ---------------- */
 type Step = "EMAIL" | "OTP" | "RESET";
+
+interface ApiResponse {
+  isSuccess: boolean;
+  resMsg?: string;
+}
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -114,21 +120,27 @@ export default function ForgotPasswordPage() {
   }, [timer]);
 
   // SEND OTP
-  const sendOtp = async () => {
+   const sendOtp = async () => {
     if (!validateEmail()) return;
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/ForgotPassword/SendOtp`, null, {
-        params: { email: form.email.trim() },
-      });
+      const res = await axios.post<ApiResponse>(
+        `${API_BASE}/ForgotPassword/SendOtp`,
+        null,
+        { params: { email: form.email.trim() } }
+      );
 
       if (res.data.isSuccess) {
         toast.success(res.data.resMsg || "OTP sent successfully!");
         setStep("OTP");
-        startTimer(); // Start countdown
-      } else toast.error(res.data.resMsg || "Failed to send OTP");
-    } catch (err: any) {
-      toast.error(err.response?.data?.resMsg || "Failed to send OTP. Try again.");
+        startTimer();
+      } else toast.error(res.data.resMsg);
+    } catch (err: unknown) {
+      if (axios.isAxiosError<ApiResponse>(err)) {
+        toast.error(err.response?.data?.resMsg || "Failed to send OTP");
+      } else {
+        toast.error("Failed to send OTP");
+      }
     } finally {
       setLoading(false);
     }
@@ -139,40 +151,51 @@ export default function ForgotPasswordPage() {
     if (!validateOtp()) return;
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/ForgotPassword/VerifyOtp`, null, {
-        params: {
-          email: form.email.trim(),
-          otp: form.otp.join(""),
-        },
-      });
+      const res = await axios.post<ApiResponse>(
+        `${API_BASE}/ForgotPassword/VerifyOtp`,
+        null,
+        {
+          params: { email: form.email.trim(), otp: form.otp.join("") },
+        }
+      );
 
       if (res.data.isSuccess) {
-        toast.success(res.data.resMsg || "OTP verified successfully!");
+        toast.success(res.data.resMsg || "OTP verified!");
         setStep("RESET");
-      } else toast.error(res.data.resMsg || "Invalid or expired OTP");
-    } catch (err: any) {
-      toast.error(err.response?.data?.resMsg || "Verification failed. Try again.");
+      } else toast.error(res.data.resMsg);
+    } catch (err: unknown) {
+      if (axios.isAxiosError<ApiResponse>(err)) {
+        toast.error(err.response?.data?.resMsg || "Verification failed");
+      } else {
+        toast.error("Verification failed");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   // RESEND OTP
-  const resendOtp = async () => {
+ const resendOtp = async () => {
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/ForgotPassword/SendOtp`, null, {
-        params: { email: form.email.trim() },
-      });
+      const res = await axios.post<ApiResponse>(
+        `${API_BASE}/ForgotPassword/SendOtp`,
+        null,
+        { params: { email: form.email.trim() } }
+      );
 
       if (res.data.isSuccess) {
         toast.success("OTP resent successfully!");
         startTimer();
-        setForm({ ...form, otp: ["", "", "", "", "", ""] }); // Clear OTP
+        setForm({ ...form, otp: ["", "", "", "", "", ""] });
         document.getElementById("otp-0")?.focus();
-      } else toast.error(res.data.resMsg || "Failed to resend OTP");
-    } catch (err: any) {
-      toast.error(err.response?.data?.resMsg || "Failed to resend OTP");
+      } else toast.error(res.data.resMsg);
+    } catch (err: unknown) {
+      if (axios.isAxiosError<ApiResponse>(err)) {
+        toast.error(err.response?.data?.resMsg || "Failed to resend OTP");
+      } else {
+        toast.error("Failed to resend OTP");
+      }
     } finally {
       setLoading(false);
     }
@@ -183,19 +206,24 @@ export default function ForgotPasswordPage() {
     if (!validatePassword()) return;
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/ForgotPassword/ResetPassword`, null, {
-        params: {
-          email: form.email.trim(),
-          newPassword: form.password,
-        },
-      });
+      const res = await axios.post<ApiResponse>(
+        `${API_BASE}/ForgotPassword/ResetPassword`,
+        null,
+        {
+          params: { email: form.email.trim(), newPassword: form.password },
+        }
+      );
 
       if (res.data.isSuccess) {
-        toast.success(res.data.resMsg || "Password reset successfully!");
+        toast.success(res.data.resMsg || "Password reset successful!");
         setTimeout(() => router.push("/login"), 2000);
-      } else toast.error(res.data.resMsg || "Failed to reset password");
-    } catch (err: any) {
-      toast.error(err.response?.data?.resMsg || "Password reset failed. Try again.");
+      } else toast.error(res.data.resMsg);
+    } catch (err: unknown) {
+      if (axios.isAxiosError<ApiResponse>(err)) {
+        toast.error(err.response?.data?.resMsg || "Password reset failed");
+      } else {
+        toast.error("Password reset failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -207,7 +235,7 @@ export default function ForgotPasswordPage() {
         <CardContent className="p-6 sm:p-10">
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800">
-              Society<span className="text-amber-500">365</span>
+            Society<span className="text-blue-500 font-mono font-bold tracking-wider">365</span>
             </h1>
             <p className="text-sm text-gray-600 mt-2">
               {step === "EMAIL" && "Forgot your password?"}
@@ -232,7 +260,7 @@ export default function ForgotPasswordPage() {
                 onClick={sendOtp}
                 disabled={loading}
                 size="lg"
-                className="w-full h-12 text-base font-medium bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg transition-all"
+                className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-600 hover:to-indigo-600 shadow-lg transition-all"
               >
                 {loading ? "Sending OTP..." : "Send OTP"}
               </Button>
@@ -252,7 +280,7 @@ export default function ForgotPasswordPage() {
                     value={form.otp[index]}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className="w-12 h-14 text-center text-2xl font-mono border-2 rounded-xl focus:border-amber-500"
+                    className="w-12 h-14 text-center text-2xl font-mono border-2 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200"
                     autoFocus={index === 0}
                   />
                 ))}
@@ -280,7 +308,7 @@ export default function ForgotPasswordPage() {
                   onClick={verifyOtp}
                   disabled={loading}
                   size="lg"
-                  className="flex-1 h-12 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg transition-all"
+                  className="flex-1 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-600 hover:to-indigo-600 shadow-lg transition-all"
                 >
                   {loading ? "Verifying..." : "Verify OTP"}
                 </Button>
@@ -314,7 +342,7 @@ export default function ForgotPasswordPage() {
                 onClick={resetPassword}
                 disabled={loading}
                 size="lg"
-                className="w-full h-12 text-base font-medium bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg transition-all"
+                className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all"
               >
                 {loading ? "Updating..." : "Update Password"}
               </Button>
@@ -346,10 +374,10 @@ function FloatingInput({
   label: string;
   error?: string;
   autoFocus?: boolean;
-  [key: string]: any;
-}) {
+} & React.ComponentProps<typeof Input>) {
   const [focused, setFocused] = useState(false);
-  const hasValue = props.value?.toString().length > 0;
+ const hasValue = props.value !== undefined && String(props.value).length > 0;
+
   const isFloating = focused || hasValue;
 
   return (
@@ -389,10 +417,9 @@ function PasswordInput({
   toggle: () => void;
   error?: string;
   autoFocus?: boolean;
-  [key: string]: any;
-}) {
+} & React.ComponentProps<typeof Input>) {
   const [focused, setFocused] = useState(false);
-  const hasValue = props.value?.toString().length > 0;
+  const hasValue = props.value !== undefined && String(props.value).length > 0;
   const isFloating = focused || hasValue;
 
   return (
