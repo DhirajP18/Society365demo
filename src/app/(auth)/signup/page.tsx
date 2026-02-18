@@ -95,6 +95,7 @@ export default function SignupPage() {
         Mobile: form.mobile,
         Floor: form.floor,
         Flat: form.flat,
+        Status: "PENDING"
       });
 
       if (res.data?.isSuccess) {
@@ -266,7 +267,7 @@ interface PasswordInputProps
   show: boolean;
   toggle: () => void;
   error?: string;
-}
+} 
 
 function PasswordInput({
   label,
