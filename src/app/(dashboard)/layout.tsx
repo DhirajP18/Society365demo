@@ -19,7 +19,7 @@ export default function DashboardLayout({
 
           <div className="flex flex-col flex-1">
             <AppHeader />
-            <main className="flex-1 p-6 bg-muted/40">
+            <main className="flex-1 p-3 sm:p-4 md:p-6 bg-muted/40 dark:bg-background">
               {children}
             </main>
             <AppFooter />

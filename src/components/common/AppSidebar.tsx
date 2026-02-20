@@ -330,7 +330,7 @@ export default function AppSidebar() {
             </div>
             <div className="flex flex-col">
               <span className="text-[14px] font-bold leading-tight text-sidebar-foreground">
-                AMS Portal
+                Society-365
               </span>
               <span className="text-[10.5px] text-muted-foreground leading-tight">
                 Management System

@@ -41,6 +41,47 @@ export default function LoginPage() {
         JSON.stringify(res.data.permissions)
       );
 
+      const responseData = (res.data ?? {}) as Record<string, unknown>;
+      const userData =
+        (responseData.user as Record<string, unknown> | undefined) ??
+        (responseData.result as Record<string, unknown> | undefined) ??
+        (responseData.data as Record<string, unknown> | undefined);
+
+      if (userData) {
+        localStorage.setItem("user", JSON.stringify(userData));
+
+        const roleId =
+          userData.roleId ??
+          userData.RoleId ??
+          responseData.roleId ??
+          responseData.RoleId;
+
+        if (roleId !== undefined && roleId !== null) {
+          localStorage.setItem("roleId", String(roleId));
+        }
+      } else {
+        const fallbackUser = {
+          name:
+            (responseData.name as string | undefined) ??
+            (responseData.fullName as string | undefined) ??
+            (responseData.userName as string | undefined) ??
+            (responseData.UserName as string | undefined) ??
+            "",
+          email:
+            (responseData.email as string | undefined) ??
+            (responseData.EmailId as string | undefined) ??
+            EmailId,
+          role:
+            (responseData.roleName as string | undefined) ??
+            (responseData.role as string | undefined) ??
+            "",
+        };
+
+        if (fallbackUser.name || fallbackUser.email || fallbackUser.role) {
+          localStorage.setItem("user", JSON.stringify(fallbackUser));
+        }
+      }
+
       toast.success("Login Successful", {
         description: "Welcome back! Redirecting...",
       });
