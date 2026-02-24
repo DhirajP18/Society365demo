@@ -57,8 +57,8 @@ function normalizeAssignment(raw: unknown): AssignmentVM | null {
 function normalizeUser(raw: unknown): UserVM | null {
   if (!raw || typeof raw !== "object") return null
   const r = raw as Record<string, unknown>
-  const id = readN(r, ["id","userId","memberId"])
-  const name = readS(r, ["name","fullName","userName"])
+  const id = readN(r, ["id","userId","memberId","ownerId","residentId"])
+  const name = readS(r, ["name","fullName","userName","ownerName","residentName","memberName"])
   if (!id || !name) return null
   return { id, name, floor: readS(r, ["floor","floorName"]), flatName: readS(r, ["flatName","flat"]), mobile: readS(r, ["mobile","mobileNo","phone"]) }
 }
@@ -254,14 +254,17 @@ export default function AssignParkingPage() {
     setActiveSlot(slot); setActiveAssign(a); setSelUserId(a?.userId ?? 0); setSearch(""); setAssignedOpen(true)
   }
 
-  // ── ✅ BUG FIX: ownerId + parkingSlotId (was userId + slotId) ────────────────
   const assignSlot = async () => {
     if (!activeSlot || !selUserId) return toast.error("Please select a user")
     setSaving(true)
     try {
       const res = await api.post<ApiResponse>("/ParkingAssignment/Assign", {
+        id: 0,
         ownerId:       selUserId,
+        userId:        selUserId,
+        memberId:      selUserId,
         parkingSlotId: activeSlot.id,
+        slotId:        activeSlot.id,
       })
       if (res.data?.isSuccess === false) { toast.error(res.data.resMsg ?? "Assignment failed"); return }
       toast.success(res.data?.resMsg ?? "Parking assigned!")

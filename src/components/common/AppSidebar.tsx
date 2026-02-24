@@ -290,6 +290,7 @@ export default function AppSidebar() {
   const [modules, setModules] = useState<Module[]>([])
   const { state, isMobile, setOpenMobile } = useSidebar()
   const isCollapsed = state === "collapsed"
+  const pathname = usePathname()
 
   useEffect(() => {
     loadSidebar()
@@ -338,13 +339,33 @@ export default function AppSidebar() {
             </div>
           </div>
         )}
-        <SidebarTrigger
+        <div
           className={cn(
-            "h-8 w-8 rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
+            "flex items-center gap-1",
             isCollapsed && !isMobile && "mx-auto",
-            isMobile && "hidden"
+            isMobile && "ml-auto"
           )}
-        />
+        >
+          <Link
+            href="/dashboard"
+            onClick={handleNavigate}
+            className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+              pathname === "/dashboard"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            )}
+            title="Dashboard"
+          >
+            <LayoutDashboard className="h-4 w-4 shrink-0" />
+          </Link>
+          <SidebarTrigger
+            className={cn(
+              "h-8 w-8 rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
+              isMobile && "hidden"
+            )}
+          />
+        </div>
       </div>
 
       {/* ── Content ── */}

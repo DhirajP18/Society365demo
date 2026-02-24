@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2, Building2, ShieldCheck, Users2 } from "lucide-react";
 
 /* ============================
    TYPES
@@ -118,104 +118,102 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 px-3 sm:px-6">
-      <Card className="w-full max-w-md sm:max-w-2xl lg:max-w-3xl bg-white/80 backdrop-blur-xl shadow-2xl rounded-2xl border-0">
-        <CardContent className="p-4 sm:p-6 lg:p-8">
-          {/* HEADER */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-800">
-              Society<span className="text-amber-500">365</span>
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Create your society account
-            </p>
-          </div>
-
-          {/* FORM */}
-          <form
-            onSubmit={handleSignup}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5"
-          >
-            <FloatingInput
-              label="Full Name"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              error={errors.name}
-            />
-
-            <FloatingInput
-              label="Email Address"
-              name="emailId"
-              value={form.emailId}
-              onChange={handleChange}
-              error={errors.emailId}
-            />
-
-            <FloatingInput
-              label="Mobile Number"
-              name="mobile"
-              maxLength={10}
-              value={form.mobile}
-              onChange={handleChange}
-              error={errors.mobile}
-            />
-
-            <FloatingInput
-              label="Floor"
-              name="floor"
-              value={form.floor}
-              onChange={handleChange}
-            />
-
-            <FloatingInput
-              label="Flat Number"
-              name="flat"
-              value={form.flat}
-              onChange={handleChange}
-            />
-
-            <PasswordInput
-              label="Password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              show={showPwd}
-              toggle={() => setShowPwd((v) => !v)}
-              error={errors.password}
-            />
-
-            <PasswordInput
-              label="Confirm Password"
-              name="confirmPassword"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              show={showPwd}
-              toggle={() => setShowPwd((v) => !v)}
-              error={errors.confirmPassword}
-            />
-
-            <div className="sm:col-span-2 pt-2">
-              <Button
-                disabled={loading}
-                className="w-full h-11 text-sm font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-md"
-              >
-                {loading ? "Creating Account..." : "Create Account"}
-              </Button>
-            </div>
-          </form>
-
-          <p className="text-center text-xs sm:text-sm text-gray-600 mt-5">
-            Already registered?{" "}
-            <span
-              onClick={() => router.push("/login")}
-              className="text-amber-600 font-semibold cursor-pointer hover:underline"
-            >
-              Login
-            </span>
+    <div className="h-screen flex flex-col lg:flex-row bg-gray-50 overflow-hidden">
+      <div className="hidden lg:block lg:w-[48%] relative">
+        <img
+          src="https://images.unsplash.com/photo-1619177982598-44fe889168cd?w=600&auto=format&fit=crop&q=60"
+          alt="Society Building"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-slate-900/55" />
+        <div className="absolute inset-0 flex flex-col justify-center px-12 text-white">
+          <h1 className="text-4xl font-extrabold leading-tight">
+            Join <span className="text-sky-300">Society-365</span>
+            <br />
+            Resident Portal
+          </h1>
+          <p className="text-base mt-4 max-w-md opacity-90">
+            Register your account and get access after admin approval.
           </p>
-        </CardContent>
-      </Card>
+          <div className="mt-6 space-y-3 text-sm text-white/90">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-sky-300" />
+              Complete society services in one place
+            </div>
+            <div className="flex items-center gap-2">
+              <Users2 className="h-4 w-4 text-sky-300" />
+              Profile linked with your flat and floor
+            </div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-sky-300" />
+              Secure onboarding with admin verification
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="w-full lg:w-[52%] flex items-center justify-center p-3 sm:p-5">
+        <Card className="w-full max-w-xl bg-white shadow-2xl border-0 rounded-2xl">
+          <CardContent className="p-5 sm:p-7">
+            <div className="text-center mb-5">
+              <img src="/logo.png" alt="Society365 Logo" className="mx-auto h-16 object-contain" />
+              <h2 className="text-lg font-semibold text-gray-800 mt-2">Create Account</h2>
+              <p className="text-xs text-gray-500 mt-1">Fill details to register your resident profile</p>
+            </div>
+
+            <form onSubmit={handleSignup} className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <FloatingInput label="Full Name" name="name" value={form.name} onChange={handleChange} error={errors.name} />
+              <FloatingInput label="Email Address" name="emailId" value={form.emailId} onChange={handleChange} error={errors.emailId} />
+              <FloatingInput label="Mobile Number" name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} error={errors.mobile} />
+              <FloatingInput label="Floor" name="floor" value={form.floor} onChange={handleChange} />
+              <FloatingInput label="Flat Number" name="flat" value={form.flat} onChange={handleChange} />
+              <PasswordInput
+                label="Password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                show={showPwd}
+                toggle={() => setShowPwd((v) => !v)}
+                error={errors.password}
+              />
+              <div className="sm:col-span-2">
+                <PasswordInput
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  show={showPwd}
+                  toggle={() => setShowPwd((v) => !v)}
+                  error={errors.confirmPassword}
+                />
+              </div>
+
+              <div className="sm:col-span-2 pt-1">
+                <Button
+                  disabled={loading}
+                  className="w-full h-10 text-sm font-semibold bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow-md"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
+                </Button>
+              </div>
+            </form>
+
+            <p className="text-center text-sm text-gray-600 mt-4">
+              Already registered?{" "}
+              <span onClick={() => router.push("/login")} className="text-sky-600 font-semibold cursor-pointer hover:underline">
+                Login
+              </span>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -232,6 +230,7 @@ interface FloatingInputProps
 
 function FloatingInput({ label, error, ...props }: FloatingInputProps) {
   const [focus, setFocus] = useState(false);
+  const hasValue = props.value !== undefined && String(props.value).length > 0;
 
   return (
     <div className="relative w-full">
@@ -239,14 +238,14 @@ function FloatingInput({ label, error, ...props }: FloatingInputProps) {
         {...props}
         onFocus={() => setFocus(true)}
         onBlur={() => !props.value && setFocus(false)}
-        className={`h-11 pt-4 ${
-          error ? "border-red-400" : "border-gray-300"
+        className={`h-11 pt-4 bg-white ${
+          error ? "border-red-400 focus-visible:ring-red-200" : "border-gray-300 focus-visible:ring-sky-200"
         }`}
       />
       <label
         className={`absolute left-3 px-1 bg-white text-xs transition-all ${
-          focus || props.value
-            ? "-top-2 text-amber-600"
+          focus || hasValue
+            ? "-top-2 text-sky-600"
             : "top-3 text-gray-400"
         }`}
       >
@@ -277,6 +276,7 @@ function PasswordInput({
   ...props
 }: PasswordInputProps) {
   const [focus, setFocus] = useState(false);
+  const hasValue = props.value !== undefined && String(props.value).length > 0;
 
   return (
     <div className="relative w-full">
@@ -285,8 +285,8 @@ function PasswordInput({
         type={show ? "text" : "password"}
         onFocus={() => setFocus(true)}
         onBlur={() => !props.value && setFocus(false)}
-        className={`h-11 pt-4 pr-10 ${
-          error ? "border-red-400" : "border-gray-300"
+        className={`h-11 pt-4 pr-10 bg-white ${
+          error ? "border-red-400 focus-visible:ring-red-200" : "border-gray-300 focus-visible:ring-sky-200"
         }`}
       />
 
@@ -300,8 +300,8 @@ function PasswordInput({
 
       <label
         className={`absolute left-3 px-1 bg-white text-xs transition-all ${
-          focus || props.value
-            ? "-top-2 text-amber-600"
+          focus || hasValue
+            ? "-top-2 text-sky-600"
             : "top-3 text-gray-400"
         }`}
       >

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, KeyRound, ShieldCheck } from "lucide-react";
 
 /* ---------------- TYPES ---------------- */
 type Step = "EMAIL" | "OTP" | "RESET";
@@ -230,136 +230,175 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 p-4">
-      <Card className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-lg shadow-2xl rounded-3xl border-0 overflow-hidden">
-        <CardContent className="p-6 sm:p-10">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800">
-            Society<span className="text-blue-500 font-mono font-bold tracking-wider">365</span>
-            </h1>
-            <p className="text-sm text-gray-600 mt-2">
-              {step === "EMAIL" && "Forgot your password?"}
-              {step === "OTP" && "Check your email for the OTP"}
-              {step === "RESET" && "Create a new secure password"}
-            </p>
-          </div>
-
-          {/* EMAIL STEP */}
-          {step === "EMAIL" && (
-            <div className="space-y-6">
-              <FloatingInput
-                label="Registered Email"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                error={errors.email}
-                autoFocus
-              />
-              <Button
-                onClick={sendOtp}
-                disabled={loading}
-                size="lg"
-                className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-600 hover:to-indigo-600 shadow-lg transition-all"
-              >
-                {loading ? "Sending OTP..." : "Send OTP"}
-              </Button>
+    <div className="h-screen flex flex-col lg:flex-row bg-gray-50 overflow-hidden">
+      <div className="hidden lg:block lg:w-[48%] relative">
+        <img
+          src="https://images.unsplash.com/photo-1619177982598-44fe889168cd?w=600&auto=format&fit=crop&q=60"
+          alt="Society Building"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-slate-900/55" />
+        <div className="absolute inset-0 flex flex-col justify-center px-12 text-white">
+          <h1 className="text-4xl font-extrabold leading-tight">
+            Recover Access to
+            <br />
+            <span className="text-sky-300">Society-365</span>
+          </h1>
+          <p className="text-base mt-4 max-w-md opacity-90">
+            Secure password recovery with OTP verification and reset.
+          </p>
+          <div className="mt-6 space-y-3 text-sm text-white/90">
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-sky-300" />
+              OTP sent to registered email
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-sky-300" />
+              Verified step-by-step flow
+            </div>
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-sky-300" />
+              Create a new secure password
+            </div>
+          </div>
+        </div>
+      </div>
 
-          {/* OTP STEP - 6 BOXES + TIMER */}
-          {step === "OTP" && (
-            <div className="space-y-6">
-              <div className="flex justify-center gap-3">
-                {[0, 1, 2, 3, 4, 5].map((index) => (
-                  <Input
-                    key={index}
-                    id={`otp-${index}`}
-                    type="text"
-                    maxLength={1}
-                    value={form.otp[index]}
-                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className="w-12 h-14 text-center text-2xl font-mono border-2 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200"
-                    autoFocus={index === 0}
-                  />
-                ))}
-              </div>
-
-              {errors.otp && <p className="text-center text-xs text-red-500">{errors.otp}</p>}
-
-              {/* Timer */}
-              <p className="text-center text-sm text-gray-600">
-                {timer > 0 ? `Resend OTP in ${timer}s` : "Didn't receive OTP?"}
+      <div className="w-full lg:w-[52%] flex items-center justify-center p-3 sm:p-5">
+        <Card className="w-full max-w-md bg-white shadow-2xl border-0 rounded-2xl">
+          <CardContent className="p-6 sm:p-7">
+            <div className="text-center mb-6">
+              <img src="/logo.png" alt="Society365 Logo" className="mx-auto h-14 object-contain" />
+              <h2 className="text-lg font-semibold text-gray-800 mt-2">Forgot Password</h2>
+              <p className="text-xs text-gray-500 mt-1">
+                {step === "EMAIL" && "Enter your registered email to receive OTP"}
+                {step === "OTP" && "Enter the 6-digit OTP sent to your email"}
+                {step === "RESET" && "Set your new password and continue"}
               </p>
+            </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
-                {timer === 0 && (
-                  <Button
-                    variant="outline"
-                    onClick={resendOtp}
-                    disabled={loading}
-                    className="flex-1 h-12"
-                  >
-                    Resend OTP
-                  </Button>
-                )}
+            {step === "EMAIL" && (
+              <div className="space-y-4">
+                <FloatingInput
+                  label="Registered Email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                  autoFocus
+                />
                 <Button
-                  onClick={verifyOtp}
+                  onClick={sendOtp}
                   disabled={loading}
-                  size="lg"
-                  className="flex-1 h-12 bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-600 hover:to-indigo-600 shadow-lg transition-all"
+                  className="w-full h-10 text-sm font-semibold bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow-md"
                 >
-                  {loading ? "Verifying..." : "Verify OTP"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending OTP...
+                    </>
+                  ) : (
+                    "Send OTP"
+                  )}
                 </Button>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* RESET STEP */}
-          {step === "RESET" && (
-            <div className="space-y-6">
-              <PasswordInput
-                label="New Password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                show={showPwd}
-                toggle={() => setShowPwd(!showPwd)}
-                error={errors.password}
-                autoFocus
-              />
-              <PasswordInput
-                label="Confirm Password"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                show={showPwd}
-                toggle={() => setShowPwd(!showPwd)}
-                error={errors.confirmPassword}
-              />
-              <Button
-                onClick={resetPassword}
-                disabled={loading}
-                size="lg"
-                className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all"
-              >
-                {loading ? "Updating..." : "Update Password"}
-              </Button>
-            </div>
-          )}
+            {step === "OTP" && (
+              <div className="space-y-4">
+                <div className="flex justify-center gap-2 sm:gap-3">
+                  {[0, 1, 2, 3, 4, 5].map((index) => (
+                    <Input
+                      key={index}
+                      id={`otp-${index}`}
+                      type="text"
+                      maxLength={1}
+                      value={form.otp[index]}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      className="w-11 h-12 sm:w-12 sm:h-12 text-center text-lg font-mono border-2 rounded-lg focus:border-sky-500 focus:ring-2 focus:ring-sky-300/30 transition-all"
+                      autoFocus={index === 0}
+                    />
+                  ))}
+                </div>
 
-          <p className="text-center text-sm text-gray-600 mt-8">
-            Remember your password?{" "}
-            <button
-              onClick={() => router.push("/login")}
-              className="text-amber-600 font-semibold hover:underline focus:outline-none focus:underline transition-colors"
-            >
-              Back to Login
-            </button>
-          </p>
-        </CardContent>
-      </Card>
+                {errors.otp && <p className="text-center text-xs text-red-500">{errors.otp}</p>}
+                <p className="text-center text-xs text-gray-500">
+                  {timer > 0 ? `Resend OTP in ${timer}s` : "Did not receive OTP?"}
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  {timer === 0 && (
+                    <Button variant="outline" onClick={resendOtp} disabled={loading} className="flex-1 h-10">
+                      Resend OTP
+                    </Button>
+                  )}
+                  <Button
+                    onClick={verifyOtp}
+                    disabled={loading}
+                    className="flex-1 h-10 text-sm font-semibold bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow-md"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      "Verify OTP"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {step === "RESET" && (
+              <div className="space-y-4">
+                <PasswordInput
+                  label="New Password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  show={showPwd}
+                  toggle={() => setShowPwd(!showPwd)}
+                  error={errors.password}
+                  autoFocus
+                />
+                <PasswordInput
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  show={showPwd}
+                  toggle={() => setShowPwd(!showPwd)}
+                  error={errors.confirmPassword}
+                />
+                <Button
+                  onClick={resetPassword}
+                  disabled={loading}
+                  className="w-full h-10 text-sm font-semibold bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow-md"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </Button>
+              </div>
+            )}
+
+            <p className="text-center text-sm text-gray-600 mt-6">
+              Remember your password?{" "}
+              <button onClick={() => router.push("/login")} className="text-sky-600 font-semibold hover:underline">
+                Back to Login
+              </button>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -387,14 +426,14 @@ function FloatingInput({
         autoFocus={autoFocus}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className={`peer h-14 px-4 pt-5 pb-2 text-base border-2 rounded-xl transition-all duration-200 ${
-          error ? "border-red-400 focus:border-red-500" : "border-gray-300 focus:border-amber-500"
+        className={`peer h-11 px-3 pt-4 pb-1 text-sm border rounded-lg transition-all duration-200 bg-white ${
+          error ? "border-red-400 focus:border-red-500" : "border-gray-300 focus:border-sky-500"
         } ${props.className || ""}`}
       />
       <label
         className={`absolute left-4 px-1 bg-white pointer-events-none transition-all duration-200 select-none ${
-          isFloating ? "-top-3 text-xs font-medium text-amber-600" : "top-4 text-sm text-gray-500"
-        } peer-focus:-top-3 peer-focus:text-xs peer-focus:font-medium peer-focus:text-amber-600`}
+          isFloating ? "-top-2 text-xs font-medium text-sky-600" : "top-3 text-xs text-gray-500"
+        } peer-focus:-top-2 peer-focus:text-xs peer-focus:font-medium peer-focus:text-sky-600`}
       >
         {label}
       </label>
@@ -430,8 +469,8 @@ function PasswordInput({
         autoFocus={autoFocus}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className={`peer h-14 px-4 pt-5 pb-2 pr-12 text-base border-2 rounded-xl transition-all duration-200 ${
-          error ? "border-red-400 focus:border-red-500" : "border-gray-300 focus:border-amber-500"
+        className={`peer h-11 px-3 pt-4 pb-1 pr-10 text-sm border rounded-lg transition-all duration-200 bg-white ${
+          error ? "border-red-400 focus:border-red-500" : "border-gray-300 focus:border-sky-500"
         }`}
       />
       <button
@@ -443,8 +482,8 @@ function PasswordInput({
       </button>
       <label
         className={`absolute left-4 px-1 bg-white pointer-events-none transition-all duration-200 select-none ${
-          isFloating ? "-top-3 text-xs font-medium text-amber-600" : "top-4 text-sm text-gray-500"
-        } peer-focus:-top-3 peer-focus:text-xs peer-focus:font-medium peer-focus:text-amber-600`}
+          isFloating ? "-top-2 text-xs font-medium text-sky-600" : "top-3 text-xs text-gray-500"
+        } peer-focus:-top-2 peer-focus:text-xs peer-focus:font-medium peer-focus:text-sky-600`}
       >
         {label}
       </label>

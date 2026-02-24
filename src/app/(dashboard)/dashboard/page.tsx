@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,11 @@ import {
   XCircle, Building2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+const ChatbotWidget = dynamic(
+  () => import("@/components/custom/chatbotWidget"),
+  { ssr: false }
+)
 
 // ─── Dummy Data ───────────────────────────────────────────────────────────────
 
@@ -534,6 +540,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ChatbotWidget />
     </div>
   )
 }
