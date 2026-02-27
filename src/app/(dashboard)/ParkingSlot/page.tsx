@@ -150,18 +150,17 @@ export default function ParkingSlotPage() {
     setSlotRows([])
     setExistingSlots([])
 
-    if (!floor) return
+    if (!floor || !floor.isParkingFloor) return
 
-    // Use already-loaded slots and filter by floor to avoid extra endpoint/CORS issues
+    // Load already-saved slots for this floor
     setLoadingSlots(true)
     try {
-      const saved = allSlots
-        .filter(s => s.floorId === floor.id)
-        .sort((a, b) => a.id - b.id)
+      const res = await api.get<ApiResponse<ParkingSlotVM[]>>(`/ParkingSlot/GetByFloor/${floor.id}`)
+      const saved = res.data?.result ?? []
       setExistingSlots(saved)
 
-      // Build the slot rows — floor slot count determines how many inputs to show
-      const total = Math.max(0, Number(floor.totalParkingSlot ?? 0))
+      // Build the slot rows — totalParkingSlot determines how many inputs to show
+      const total = floor.totalParkingSlot ?? 0
       const rows: SlotRow[] = Array.from({ length: total }, (_, i) => {
         const existing = saved[i]   // match by position
         return {
@@ -224,9 +223,9 @@ export default function ParkingSlotPage() {
 
       if (insertOk && updateOk) {
         toast.success(`${slotRows.length} slot(s) saved for ${selectedFloor.floorName}`)
-        // Reload slots first, then rebuild selected floor rows
-        await loadAllSlots()
+        // Reload slots
         await handleFloorSelect(String(selectedFloor.id))
+        await loadAllSlots()
       }
     } catch (e) { toast.error(getApiMessage(e)) }
     finally { setSaving(false) }
@@ -281,8 +280,8 @@ export default function ParkingSlotPage() {
   }, [allSlots, search, floors])
 
   const isParkingFloor   = selectedFloor?.isParkingFloor === true
-  const totalSlots       = Math.max(0, Number(selectedFloor?.totalParkingSlot ?? 0))
-  const isNotParking     = !!selectedFloor && !isParkingFloor && totalSlots === 0
+  const isNotParking     = selectedFloor && !isParkingFloor
+  const totalSlots       = selectedFloor?.totalParkingSlot ?? 0
 
   // ─────────────────────────────────────────────────────────────────────────────
   // RENDER
@@ -380,7 +379,7 @@ export default function ParkingSlotPage() {
                   }
                 </span>
 
-                {totalSlots > 0 && (
+                {isParkingFloor && (
                   <>
                     <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
                       <Hash className="h-3 w-3" />{totalSlots} Total Slots
@@ -412,7 +411,7 @@ export default function ParkingSlotPage() {
         </div>
 
         {/* ══════════ STEP 2 — Bulk Slot Name Input ══════════ */}
-        {!!selectedFloor && totalSlots > 0 && (
+        {isParkingFloor && totalSlots > 0 && (
           <div className="bg-white dark:bg-[#0f1117] rounded-xl border border-gray-200 dark:border-white/[0.06] shadow-sm overflow-hidden">
 
             {/* Header */}
@@ -519,7 +518,7 @@ export default function ParkingSlotPage() {
         )}
 
         {/* ══════════ STEP 2 edge case — parking floor but 0 slots configured ══════════ */}
-        {!!selectedFloor && totalSlots === 0 && !loadingSlots && (
+        {isParkingFloor && totalSlots === 0 && !loadingSlots && (
           <div className="bg-white dark:bg-[#0f1117] rounded-xl border border-gray-200 dark:border-white/[0.06] shadow-sm p-8 flex flex-col items-center gap-3 text-center">
             <div className="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
               <AlertTriangle className="h-6 w-6 text-amber-500" />
@@ -702,7 +701,7 @@ export default function ParkingSlotPage() {
               </div>
 
               {filteredAllSlots.length === 0 && search && (
-                <div className="py-10 text-center text-gray-400 text-[12.5px]">No slots match {search} </div>
+                <div className="py-10 text-center text-gray-400 text-[12.5px]">No slots match{search}</div>
               )}
             </>
           )}
