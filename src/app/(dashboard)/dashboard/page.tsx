@@ -174,7 +174,7 @@ export default function DashboardPage() {
   return (
     // ✅ NO top padding (pt-0) — no gap between header and content
     // bg works in both light and dark
-    <div className="min-h-screen bg-[#f5f6fa] dark:bg-[#0a0c11] px-3 sm:px-5 pt-3 pb-6 space-y-4">
+    <div className="min-h-full bg-[#f5f6fa] dark:bg-[#0a0c11] px-3 sm:px-5 pt-3 pb-6 space-y-4">
 
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

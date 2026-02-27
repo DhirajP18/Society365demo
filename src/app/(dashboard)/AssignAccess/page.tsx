@@ -242,12 +242,12 @@ export default function RoleMenuMappingPage() {
   const selRoleName = roles.find(r => r.roleId === selectedRole)?.roleName ?? ""
 
   return (
-    <div className="flex flex-col h-full bg-[#f5f6fa] dark:bg-[#0a0c11]">
+    <div className="flex h-full min-w-0 flex-col overflow-x-hidden bg-[#f5f6fa] dark:bg-[#0a0c11]">
 
       {/* ══ Header ══ */}
-      <div className="bg-white dark:bg-[#0f1117] border-b border-gray-200 dark:border-white/[0.06] px-3 sm:px-5 py-3 shrink-0">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
+      <div className="shrink-0 border-b border-gray-200 bg-white px-3 py-3 dark:border-white/[0.06] dark:bg-[#0f1117] sm:px-5">
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2.5">
             <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/20 shrink-0">
               <Shield className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
             </div>
@@ -263,12 +263,12 @@ export default function RoleMenuMappingPage() {
 
           {modules.length > 0 && (
             <Button onClick={savePermissions} disabled={loading}
-              className="h-8 sm:h-9 px-3 sm:px-4 text-[12px] sm:text-[13px] font-bold gap-1.5 shrink-0
+              className="h-8 sm:h-9 px-2.5 sm:px-4 text-[12px] sm:text-[13px] font-bold gap-1.5 shrink-0
                 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl
                 shadow-[0_2px_8px_rgba(99,102,241,0.3)] disabled:opacity-50">
               {loading
-                ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Saving…</span></>
-                : <><Save className="h-3.5 w-3.5" /><span className="hidden sm:inline">Save Permissions</span><span className="sm:hidden">Save</span></>
+                ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Saving...</span></>
+                : <><Save className="h-3.5 w-3.5" /><span className="hidden sm:inline">Save Permissions</span></>
               }
             </Button>
           )}
@@ -276,18 +276,18 @@ export default function RoleMenuMappingPage() {
       </div>
 
       {/* ══ Body ══ */}
-      <div className="flex-1 overflow-auto p-3 sm:p-4 space-y-4">
+      <div className="flex-1 overflow-x-hidden overflow-y-auto p-2 pb-20 space-y-3 sm:space-y-4 sm:p-4 sm:pb-4">
 
         {/* Role selector + stats */}
         <div className="bg-white dark:bg-[#0f1117] rounded-xl border border-gray-200 dark:border-white/[0.06] shadow-sm p-3 sm:p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
 
             {/* Role picker */}
-            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="flex min-w-0 flex-1 items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 shrink-0">
                 <Users className="h-4 w-4 text-violet-600 dark:text-violet-400" />
               </div>
-              <div className="flex-1 min-w-0 max-w-xs">
+              <div className="flex-1 min-w-0 w-full sm:max-w-xs">
                 <Select
                   value={selectedRole ? String(selectedRole) : ""}
                   onValueChange={v => setSelectedRole(Number(v))}
@@ -420,7 +420,7 @@ export default function RoleMenuMappingPage() {
 
         {/* Save button — bottom float on mobile */}
         {modules.length > 0 && (
-          <div className="sm:hidden sticky bottom-3 z-10">
+          <div className="sm:hidden sticky bottom-2 z-10 px-0.5 pb-[env(safe-area-inset-bottom)]">
             <Button onClick={savePermissions} disabled={loading}
               className="w-full h-11 text-[13.5px] font-bold gap-2 rounded-xl
                 bg-indigo-600 hover:bg-indigo-500 text-white

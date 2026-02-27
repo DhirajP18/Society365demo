@@ -103,7 +103,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col lg:flex-row bg-gray-50 overflow-hidden">
+    <div className="min-h-[100dvh] lg:h-[100dvh] flex flex-col lg:flex-row bg-gray-50 overflow-y-auto lg:overflow-hidden">
       {/* LEFT SIDE */}
       <div className="hidden lg:block lg:w-[48%] relative">
         <img
@@ -135,7 +135,7 @@ export default function LoginPage() {
       </div>
 
       {/* RIGHT SIDE – LOGIN */}
-      <div className="w-full lg:w-[52%] flex items-center justify-center p-3">
+      <div className="w-full lg:w-[52%] flex items-start lg:items-center justify-center p-3 py-5 sm:p-5">
         <Card className="w-full max-w-md bg-white shadow-2xl border-0 rounded-2xl">
           <CardContent className="pb-5 px-8">
             <div className="text-center mb-3">

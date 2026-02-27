@@ -118,7 +118,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col lg:flex-row bg-gray-50 overflow-hidden">
+    <div className="min-h-[100dvh] lg:h-[100dvh] flex flex-col lg:flex-row bg-gray-50 overflow-y-auto lg:overflow-hidden">
       <div className="hidden lg:block lg:w-[48%] relative">
         <img
           src="https://images.unsplash.com/photo-1619177982598-44fe889168cd?w=600&auto=format&fit=crop&q=60"
@@ -152,7 +152,7 @@ export default function SignupPage() {
         </div>
       </div>
 
-      <div className="w-full lg:w-[52%] flex items-center justify-center p-3 sm:p-5">
+      <div className="w-full lg:w-[52%] flex items-start lg:items-center justify-center p-3 py-5 sm:p-5">
         <Card className="w-full max-w-xl bg-white shadow-2xl border-0 rounded-2xl">
           <CardContent className="p-5 sm:p-7">
             <div className="text-center mb-5">

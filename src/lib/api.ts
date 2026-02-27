@@ -9,6 +9,13 @@ const api = axios.create({
 
 // Attach JWT token automatically (after login)
 api.interceptors.request.use((config) => {
+  // Let browser set multipart boundary for file uploads.
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    if (config.headers) {
+      delete config.headers["Content-Type"];
+    }
+  }
+
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

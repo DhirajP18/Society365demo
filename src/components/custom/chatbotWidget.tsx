@@ -105,12 +105,12 @@ export default function ChatbotWidget() {
   return (
     <>
       {isOpen && (
-        <div className="fixed bottom-20 right-4 z-50 w-[min(92vw,380px)] rounded-2xl border border-gray-200 dark:border-white/[0.08] bg-white dark:bg-[#161923] shadow-2xl overflow-hidden">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/[0.06] px-4 py-3 bg-gradient-to-r from-indigo-50 to-sky-50 dark:from-indigo-500/10 dark:to-sky-500/10">
+        <div className="fixed bottom-20 right-4 z-50 w-[min(92vw,380px)] rounded-2xl border border-cyan-200 dark:border-cyan-500/30 bg-cyan-50 dark:bg-[#0b1220] shadow-2xl overflow-hidden">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/[0.06] px-4 py-3 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-500/15 dark:to-blue-500/15">
             <div className="flex items-center gap-2">
-              <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
+              <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-cyan-600 text-white shadow-sm">
                 <Bot className="h-4 w-4" />
-                <span className="absolute -right-0.5 -top-0.5 rounded-full bg-cyan-500 p-0.5">
+                <span className="absolute -right-0.5 -top-0.5 rounded-full bg-blue-500 p-0.5">
                   <Sparkles className="h-2.5 w-2.5" />
                 </span>
               </div>
@@ -131,12 +131,12 @@ export default function ChatbotWidget() {
             </button>
           </div>
 
-          <div ref={scrollRef} className="max-h-[48vh] space-y-2 overflow-y-auto px-3 py-3">
+          <div ref={scrollRef} className="max-h-[48vh] space-y-2 overflow-y-auto px-3 py-3 bg-white/80 dark:bg-[#0b1220]/70">
             {messages.map((m, idx) => (
               <div key={`${m.role}-${idx}`} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                 <div className={cn("flex items-start gap-2 max-w-[88%]", m.role === "user" && "flex-row-reverse")}>
                   {m.role === "bot" && (
-                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">
+                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">
                       <Bot className="h-3.5 w-3.5" />
                     </div>
                   )}
@@ -144,8 +144,8 @@ export default function ChatbotWidget() {
                     className={cn(
                       "rounded-2xl px-3 py-2 text-[12.5px] leading-relaxed",
                       m.role === "user"
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-100 text-gray-700 dark:bg-white/[0.06] dark:text-gray-200"
+                        ? "bg-cyan-600 text-white dark:bg-cyan-500"
+                        : "bg-gray-100 text-gray-700 dark:bg-slate-700/60 dark:text-gray-100"
                     )}
                   >
                     {m.text}
@@ -157,15 +157,15 @@ export default function ChatbotWidget() {
             {isThinking && (
               <div className="flex justify-start">
                 <div className="flex items-start gap-2">
-                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">
+                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">
                     <Bot className="h-3.5 w-3.5" />
                   </div>
-                  <div className="rounded-2xl bg-gray-100 px-3 py-2.5 text-[12px] text-gray-600 dark:bg-white/[0.06] dark:text-gray-300 min-w-[190px]">
+                  <div className="rounded-2xl bg-gray-100 px-3 py-2.5 text-[12px] text-gray-600 dark:bg-slate-700/60 dark:text-gray-200 min-w-[190px]">
                     <div className="font-medium">{THINKING_STEPS[thinkingStep]}...</div>
                     <div className="mt-2 flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0ms]" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:120ms]" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:240ms]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-bounce [animation-delay:0ms]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-bounce [animation-delay:120ms]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-bounce [animation-delay:240ms]" />
                     </div>
                   </div>
                 </div>
@@ -175,12 +175,12 @@ export default function ChatbotWidget() {
             {typingText && (
               <div className="flex justify-start">
                 <div className="flex items-start gap-2 max-w-[88%]">
-                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">
+                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">
                     <Bot className="h-3.5 w-3.5" />
                   </div>
-                  <div className="rounded-2xl bg-gray-100 px-3 py-2 text-[12.5px] text-gray-700 dark:bg-white/[0.06] dark:text-gray-200">
+                  <div className="rounded-2xl bg-gray-100 px-3 py-2 text-[12.5px] text-gray-700 dark:bg-slate-700/60 dark:text-gray-100">
                     {typingText}
-                    <span className="ml-0.5 inline-block h-3 w-[1.5px] animate-pulse bg-indigo-500 align-middle" />
+                    <span className="ml-0.5 inline-block h-3 w-[1.5px] animate-pulse bg-cyan-500 align-middle" />
                   </div>
                 </div>
               </div>
@@ -207,7 +207,7 @@ export default function ChatbotWidget() {
 
       <button
         onClick={() => setIsOpen((p) => !p)}
-        className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-cyan-500 text-white shadow-lg transition-all hover:from-indigo-500 hover:to-cyan-400"
+        className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-cyan-600 to-blue-500 text-white shadow-lg transition-all hover:from-cyan-500 hover:to-blue-400"
         title="Open AI Chatbot"
       >
         <div className="relative">
