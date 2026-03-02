@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 
-import axios, { type AxiosError } from "axios";
+import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,9 +12,6 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import FloatingInput from "@/components/common/floatingInput";
 
-/* ============================
-   API ERROR RESPONSE TYPE
-============================ */
 interface ApiErrorResponse {
   resMsg?: string;
 }
@@ -36,10 +33,7 @@ export default function LoginPage() {
       });
 
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem(
-        "permissions",
-        JSON.stringify(res.data.permissions)
-      );
+      localStorage.setItem("permissions", JSON.stringify(res.data.permissions));
 
       const responseData = (res.data ?? {}) as Record<string, unknown>;
       const userData =
@@ -103,8 +97,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[100dvh] lg:h-[100dvh] flex flex-col lg:flex-row bg-gray-50 overflow-y-auto lg:overflow-hidden">
-      {/* LEFT SIDE */}
+    <div className="min-h-[100dvh] lg:h-[100dvh] flex flex-col lg:flex-row bg-gray-50 overflow-y-auto lg:overflow-hidden dark:bg-slate-950">
       <div className="hidden lg:block lg:w-[48%] relative">
         <img
           src="https://images.unsplash.com/photo-1619177982598-44fe889168cd?w=600&auto=format&fit=crop&q=60"
@@ -127,16 +120,15 @@ export default function LoginPage() {
           </p>
 
           <div className="mt-6 space-y-2 text-sm text-white/90">
-            <div>🏛️ Complete Apartment & Society Management</div>
-            <div>📅 Events & Meetings</div>
-            <div>🔐 Secure Access Control</div>
+            <div>Complete Apartment and Society Management</div>
+            <div>Events and Meetings</div>
+            <div>Secure Access Control</div>
           </div>
         </div>
       </div>
 
-      {/* RIGHT SIDE – LOGIN */}
       <div className="w-full lg:w-[52%] flex items-start lg:items-center justify-center p-3 py-5 sm:p-5">
-        <Card className="w-full max-w-md bg-white shadow-2xl border-0 rounded-2xl">
+        <Card className="w-full max-w-md bg-white shadow-2xl border-0 rounded-2xl dark:bg-slate-900">
           <CardContent className="pb-5 px-8">
             <div className="text-center mb-3">
               <img
@@ -145,7 +137,7 @@ export default function LoginPage() {
                 className="mx-auto h-48 object-contain"
               />
 
-              <h2 className="text-lg mb-4 font-medium text-gray-700 -mt-6">
+              <h2 className="text-lg mb-4 font-medium text-gray-700 -mt-6 dark:text-slate-200">
                 LOGIN
               </h2>
             </div>
@@ -190,7 +182,7 @@ export default function LoginPage() {
                 Forgot password?
               </p>
 
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-gray-700 dark:text-slate-300">
                 New here?{" "}
                 <span
                   onClick={() => router.push("/signup")}
@@ -201,11 +193,12 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <p className="text-xs text-center text-gray-500 mt-5">
+            <p className="text-xs text-center text-gray-500 mt-5 dark:text-slate-400">
               Managed by{" "}
               <a
                 href="https://nexspiretechnologies.in"
                 target="_blank"
+                rel="noreferrer"
                 className="font-semibold hover:underline"
               >
                 Nexspire Technologies

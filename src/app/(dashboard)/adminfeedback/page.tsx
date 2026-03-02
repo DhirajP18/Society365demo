@@ -12,9 +12,10 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {
-  Plus, Pencil, Trash2, RefreshCw, CheckCircle2, X, Send,
+  Plus, Pencil, Trash2, RefreshCw, CheckCircle2, X,
   Star, BarChart3, MessageSquare, GripVertical, ChevronDown,
   ChevronUp, Loader2, AlertTriangle, Users, TrendingUp,
+  Eye, EyeOff, Radio,
 } from "lucide-react"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -135,11 +136,11 @@ export default function AdminFeedbackPage() {
   const [questions,  setQ]        = useState<Question[]>([])
   const [stats,      setStats]    = useState<Stats | null>(null)
   const [loading,    setLoading]  = useState(true)
-  const [publishing, setPub]      = useState(false)
   const [showForm,   setShowForm] = useState(false)
   const [editQ,      setEditQ]    = useState<Question | null>(null)
   const [delId,      setDelId]    = useState<number | null>(null)
   const [saving,     setSaving]   = useState(false)
+  const [toggling,   setToggling] = useState<number | null>(null)  // id of question being toggled
   const [expandSubs, setExpSubs]  = useState(false)
   const [mcOptions,  setMCO]      = useState("")
 
@@ -204,7 +205,7 @@ export default function AdminFeedbackPage() {
         ? await api.put<ApiRes>("/FeedbackAdmin/UpdateQuestion", payload)
         : await api.post<ApiRes>("/FeedbackAdmin/InsertQuestion", payload)
       if (r.data?.isSuccess) {
-        toast.success(editQ ? "Question updated!" : "Question added!")
+        toast.success(editQ ? "Question updated!" : "Question added as Draft")
         resetForm(); load()
       } else { toast.error(r.data?.resMsg ?? "Failed") }
     } catch (e) { toast.error(getApiMessage(e)) }
@@ -219,18 +220,32 @@ export default function AdminFeedbackPage() {
     } catch (e) { toast.error(getApiMessage(e)) }
   }
 
-  const publish = async () => {
-    setPub(true)
+  // ── Per-question publish / unpublish toggle ────────────────────────────────
+  const togglePublish = async (q: Question) => {
+    setToggling(q.id)
+    const newState = !q.isPublished
     try {
-      const r = await api.post<ApiRes>("/FeedbackAdmin/PublishQuestions", {})
-      if (r.data?.isSuccess) { toast.success("Feedback published to all users!"); load() }
-      else toast.error(r.data?.resMsg ?? "Failed")
-    } catch (e) { toast.error(getApiMessage(e)) }
-    finally { setPub(false) }
+      const r = await api.post<ApiRes>(
+        `/FeedbackAdmin/TogglePublish?questionId=${q.id}&isPublished=${newState}`
+      )
+      if (r.data?.isSuccess) {
+        toast.success(newState ? "✅ Question is now Live" : "Question moved to Draft")
+        // Optimistic update — instant UI without full reload
+        setQ(prev => prev.map(x => x.id === q.id ? { ...x, isPublished: newState } : x))
+      } else {
+        toast.error(r.data?.resMsg ?? "Failed")
+      }
+    } catch (e) {
+      toast.error(getApiMessage(e))
+    } finally {
+      setToggling(null)
+    }
   }
 
+  // ── Derived ────────────────────────────────────────────────────────────────
+  const liveQuestions  = questions.filter(q => q.isPublished)
+  const draftQuestions = questions.filter(q => !q.isPublished)
   const card = "bg-white dark:bg-[#0f1117] rounded-2xl border border-gray-200 dark:border-white/[0.07] shadow-sm"
-  const publishedCount = questions.filter(q => q.isPublished).length
 
   return (
     <div className="flex flex-col h-full bg-[#fdf4f5] dark:bg-[#0a070a] overflow-auto">
@@ -244,42 +259,36 @@ export default function AdminFeedbackPage() {
             </div>
             <div>
               <h1 className="text-[16px] font-bold text-gray-900 dark:text-white">Feedback Management</h1>
-              <p className="text-[11px] text-gray-400 hidden sm:block">Design questions · publish to residents · view anonymous results</p>
+              <p className="text-[11px] text-gray-400 hidden sm:block">Publish each question separately · users only see Live questions</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={publish} disabled={publishing || questions.length === 0}
-              className="h-8 px-3.5 text-[12px] font-bold rounded-xl gap-1.5 bg-rose-600 hover:bg-rose-500 text-white disabled:opacity-40">
-              {publishing
-                ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Publishing…</>
-                : <><Send className="h-3.5 w-3.5" />{publishedCount > 0 ? "Re-publish" : "Publish"}</>}
-            </Button>
-            <Button variant="outline" size="sm" onClick={load} disabled={loading}
-              className="h-8 px-3 border-gray-200 dark:border-white/[0.08] bg-white dark:bg-transparent text-gray-500 rounded-xl">
-              <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" onClick={load} disabled={loading}
+            className="h-8 px-3 border-gray-200 dark:border-white/[0.08] bg-white dark:bg-transparent text-gray-500 rounded-xl">
+            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+          </Button>
         </div>
 
         {/* Stats chips */}
-        {stats && (
-          <div className="flex items-center gap-3 mt-3 flex-wrap">
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {stats && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
               <Users className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
               <span className="text-[12px] font-bold text-rose-700 dark:text-rose-400">{stats.totalSubmissions} responses</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/[0.06] border border-gray-200 dark:border-white/[0.07]">
-              <MessageSquare className="h-3.5 w-3.5 text-gray-500" />
-              <span className="text-[12px] font-bold text-gray-600 dark:text-gray-300">{questions.length} questions</span>
-            </div>
-            {publishedCount > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span className="text-[12px] font-bold text-emerald-700 dark:text-emerald-400">{publishedCount} live</span>
-              </div>
-            )}
+          )}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/[0.06] border border-gray-200 dark:border-white/[0.07]">
+            <MessageSquare className="h-3.5 w-3.5 text-gray-500" />
+            <span className="text-[12px] font-bold text-gray-600 dark:text-gray-300">{questions.length} questions</span>
           </div>
-        )}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+            <Radio className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-[12px] font-bold text-emerald-700 dark:text-emerald-400">{liveQuestions.length} Live</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/[0.06] border border-gray-200 dark:border-white/[0.07]">
+            <EyeOff className="h-3.5 w-3.5 text-gray-400" />
+            <span className="text-[12px] font-bold text-gray-500 dark:text-gray-400">{draftQuestions.length} Draft</span>
+          </div>
+        </div>
 
         {/* Tabs */}
         <div className="flex -mb-px mt-3">
@@ -304,6 +313,9 @@ export default function AdminFeedbackPage() {
             <div className="flex items-center justify-between">
               <p className="text-[12.5px] font-bold text-gray-600 dark:text-gray-300">
                 {questions.length} question{questions.length !== 1 ? "s" : ""}
+                {liveQuestions.length > 0 && (
+                  <span className="ml-2 text-emerald-600 dark:text-emerald-400">· {liveQuestions.length} live</span>
+                )}
               </p>
               <Button size="sm" onClick={() => { resetForm(); setShowForm(!showForm) }}
                 className="h-8 px-3.5 text-[12px] font-bold rounded-xl gap-1.5 bg-rose-600 hover:bg-rose-500 text-white">
@@ -316,7 +328,9 @@ export default function AdminFeedbackPage() {
               <div className={cn(card, "overflow-hidden animate-[fadeInUp_0.25s_ease_both]")}>
                 <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-gray-100 dark:border-white/[0.05] bg-rose-50/60 dark:bg-rose-900/10">
                   <MessageSquare className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-                  <p className="text-[13px] font-bold text-gray-900 dark:text-white">{editQ ? "Edit Question" : "New Question"}</p>
+                  <p className="text-[13px] font-bold text-gray-900 dark:text-white">
+                    {editQ ? "Edit Question" : "New Question — saved as Draft"}
+                  </p>
                 </div>
                 <div className="p-5 space-y-4">
                   <FloatInput label="Question text *" value={form.question} onChange={v => setForm(f => ({ ...f, question: v }))} as="textarea" />
@@ -383,46 +397,54 @@ export default function AdminFeedbackPage() {
                 <p className="text-[13px] font-semibold text-gray-400">No questions yet. Add your first feedback question.</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {questions.map((q, i) => (
-                  <div key={q.id}
-                    className={cn(card, "overflow-hidden animate-[fadeInUp_0.25s_ease_both] hover:shadow-md transition-shadow")}
-                    style={{ animationDelay: `${i * 40}ms` }}>
-                    <div className="flex items-center gap-3 px-4 py-3.5">
-                      <GripVertical className="h-4 w-4 text-gray-300 dark:text-gray-600 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full", TYPE_INFO[q.questionType]?.color)}>
-                            {TYPE_INFO[q.questionType]?.icon} {TYPE_INFO[q.questionType]?.label}
-                          </span>
-                          {q.isRequired && (
-                            <span className="text-[9.5px] font-black px-1.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">Required</span>
-                          )}
-                          {q.isPublished && (
-                            <span className="text-[9.5px] font-black px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">Live</span>
-                          )}
-                        </div>
-                        <p className="text-[13px] font-semibold text-gray-800 dark:text-white mt-1 truncate">{q.question}</p>
-                        {q.responseCount > 0 && (
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="text-[10.5px] text-gray-400">{q.responseCount} response{q.responseCount !== 1 ? "s" : ""}</span>
-                            {q.questionType === "Rating" && <Stars value={q.averageRating} />}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button onClick={() => openEdit(q)}
-                          className="h-7 w-7 flex items-center justify-center rounded-lg border border-gray-200 dark:border-white/[0.08] text-gray-400 hover:text-rose-600 hover:border-rose-300 transition-all">
-                          <Pencil className="h-3 w-3" />
-                        </button>
-                        <button onClick={() => setDelId(q.id)}
-                          className="h-7 w-7 flex items-center justify-center rounded-lg border border-gray-200 dark:border-white/[0.08] text-gray-400 hover:text-rose-600 hover:border-rose-300 transition-all">
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
+              <div className="space-y-5">
+
+                {/* ── LIVE section ── */}
+                {liveQuestions.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                        Live — Visible to users ({liveQuestions.length})
+                      </p>
                     </div>
+                    {liveQuestions.map((q, i) => (
+                      <QuestionCard
+                        key={q.id}
+                        q={q}
+                        index={i}
+                        toggling={toggling === q.id}
+                        onEdit={() => openEdit(q)}
+                        onDelete={() => setDelId(q.id)}
+                        onToggle={() => togglePublish(q)}
+                      />
+                    ))}
                   </div>
-                ))}
+                )}
+
+                {/* ── DRAFT section ── */}
+                {draftQuestions.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-gray-400" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Draft — Not visible to users ({draftQuestions.length})
+                      </p>
+                    </div>
+                    {draftQuestions.map((q, i) => (
+                      <QuestionCard
+                        key={q.id}
+                        q={q}
+                        index={i}
+                        toggling={toggling === q.id}
+                        onEdit={() => openEdit(q)}
+                        onDelete={() => setDelId(q.id)}
+                        onToggle={() => togglePublish(q)}
+                      />
+                    ))}
+                  </div>
+                )}
+
               </div>
             )}
           </>
@@ -556,6 +578,116 @@ export default function AdminFeedbackPage() {
       </AlertDialog>
 
       <style>{`@keyframes fadeInUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }`}</style>
+    </div>
+  )
+}
+
+// ── Question card sub-component ───────────────────────────────────────────────
+function QuestionCard({
+  q, index, toggling, onEdit, onDelete, onToggle,
+}: {
+  q: Question
+  index: number
+  toggling: boolean
+  onEdit: () => void
+  onDelete: () => void
+  onToggle: () => void
+}) {
+  const TYPE_INFO: Record<string, { label: string; color: string; icon: string }> = {
+    Rating:      { label: "Star Rating",     color: "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30",        icon: "⭐" },
+    Text:        { label: "Free Text",       color: "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30",              icon: "✏️" },
+    YesNo:       { label: "Yes / No",        color: "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30", icon: "✅" },
+    MultiChoice: { label: "Multiple Choice", color: "bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-500/30",   icon: "☑️" },
+  }
+
+  return (
+    <div
+      className={cn(
+        "bg-white dark:bg-[#0f1117] rounded-2xl border shadow-sm overflow-hidden hover:shadow-md transition-all animate-[fadeInUp_0.25s_ease_both]",
+        q.isPublished
+          ? "border-emerald-200 dark:border-emerald-500/20"
+          : "border-gray-200 dark:border-white/[0.07]"
+      )}
+      style={{ animationDelay: `${index * 40}ms` }}>
+
+      {/* Green top accent for live questions */}
+      {q.isPublished && (
+        <div className="h-0.5 bg-gradient-to-r from-emerald-400 to-teal-400" />
+      )}
+
+      <div className="flex items-center gap-3 px-4 py-3.5">
+        <GripVertical className="h-4 w-4 text-gray-300 dark:text-gray-600 shrink-0" />
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full", TYPE_INFO[q.questionType]?.color)}>
+              {TYPE_INFO[q.questionType]?.icon} {TYPE_INFO[q.questionType]?.label}
+            </span>
+            {q.isRequired && (
+              <span className="text-[9.5px] font-black px-1.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">Required</span>
+            )}
+            {/* Status pill */}
+            {q.isPublished ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />Live
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/[0.06] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/[0.09]">
+                <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />Draft
+              </span>
+            )}
+          </div>
+          <p className="text-[13px] font-semibold text-gray-800 dark:text-white mt-1 truncate">{q.question}</p>
+          {q.responseCount > 0 && (
+            <div className="flex items-center gap-3 mt-1">
+              <span className="text-[10.5px] text-gray-400">{q.responseCount} response{q.responseCount !== 1 ? "s" : ""}</span>
+              {q.questionType === "Rating" && (
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <Star key={i} className={cn("h-3 w-3", i < Math.round(q.averageRating) ? "fill-amber-400 text-amber-400" : "text-gray-300 dark:text-gray-600")} />
+                  ))}
+                  <span className="ml-1 text-[10px] font-bold text-gray-500 dark:text-gray-400">{q.averageRating.toFixed(1)}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1 shrink-0">
+
+          {/* Publish / Unpublish toggle */}
+          <button
+            onClick={onToggle}
+            disabled={toggling}
+            title={q.isPublished ? "Click to Unpublish" : "Click to Go Live"}
+            className={cn(
+              "flex items-center gap-1.5 h-7 px-2.5 rounded-lg border text-[11px] font-bold transition-all disabled:opacity-60",
+              q.isPublished
+                ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-600"
+                : "bg-white dark:bg-[#1a1d27] border-gray-200 dark:border-white/[0.09] text-gray-500 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700"
+            )}>
+            {toggling
+              ? <Loader2 className="h-3 w-3 animate-spin" />
+              : q.isPublished
+                ? <><Eye className="h-3 w-3" /><span className="hidden sm:inline">Live</span></>
+                : <><EyeOff className="h-3 w-3" /><span className="hidden sm:inline">Draft</span></>
+            }
+          </button>
+
+          {/* Edit */}
+          <button onClick={onEdit}
+            className="h-7 w-7 flex items-center justify-center rounded-lg border border-gray-200 dark:border-white/[0.08] text-gray-400 hover:text-rose-600 hover:border-rose-300 transition-all">
+            <Pencil className="h-3 w-3" />
+          </button>
+
+          {/* Delete */}
+          <button onClick={onDelete}
+            className="h-7 w-7 flex items-center justify-center rounded-lg border border-gray-200 dark:border-white/[0.08] text-gray-400 hover:text-rose-600 hover:border-rose-300 transition-all">
+            <Trash2 className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
