@@ -161,6 +161,10 @@ function QRModal({ token, onClose, onSubmitted }: {
 // ACCORDION VISITOR ROW
 // Collapsed  → one line: status dot | Name | Purpose | Visiting User | Out btn
 // Expanded   → full detail grid
+//
+// KEY: AccordionTrigger renders as <button>. Out button is also a <button>.
+// Nesting button-in-button is invalid HTML → hydration error.
+// Fix: trigger and Out button are SIBLINGS in a flex row, NOT nested.
 // ══════════════════════════════════════════════════════════════════════════════
 function VisitorRow({ v, onOut, onDelete }: {
   v: VisitorEntry; onOut: () => void; onDelete: () => void
@@ -186,67 +190,71 @@ function VisitorRow({ v, onOut, onDelete }: {
           : "border-gray-200 dark:border-white/[0.07] bg-white dark:bg-[#0d1117] opacity-80"
       )}>
 
-      {/* ── COLLAPSED ROW ─────────────────────────────────────────────── */}
-      <AccordionTrigger
-        className="px-4 py-0 hover:no-underline hover:bg-gray-50 dark:hover:bg-white/[0.02] group [&>svg]:hidden"
-        asChild={false}>
+      {/* ── COLLAPSED ROW ─────────────────────────────────────────────────
+          AccordionTrigger = <button>. Out button = <button>.
+          They MUST be siblings — never nested. So we use a flex wrapper
+          outside the trigger: [trigger info area] + [action buttons]
+      ──────────────────────────────────────────────────────────────────── */}
+      <div className="flex items-center w-full group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
 
-        <div className="flex items-center w-full gap-3 py-3 min-w-0">
+        {/* Left: AccordionTrigger wraps ONLY the info columns — no buttons inside */}
+        <AccordionTrigger className="flex-1 min-w-0 px-4 py-3 hover:no-underline [&>svg]:hidden">
+          <div className="flex items-center gap-3 w-full min-w-0">
 
-          {/* Status dot */}
-          <span className={cn("h-2 w-2 rounded-full shrink-0 mt-0.5",
-            isActive ? "bg-emerald-500 animate-pulse" : "bg-gray-400")} />
+            {/* Status dot */}
+            <span className={cn("h-2 w-2 rounded-full shrink-0",
+              isActive ? "bg-emerald-500 animate-pulse" : "bg-gray-400")} />
 
-          {/* Name — always visible */}
-          <p className="text-[13px] font-bold text-gray-900 dark:text-white shrink-0 w-28 truncate">
-            {v.visitorName}
-          </p>
+            {/* Name */}
+            <p className="text-[13px] font-bold text-gray-900 dark:text-white shrink-0 w-28 truncate">
+              {v.visitorName}
+            </p>
 
-          {/* Purpose — hidden on very small screens */}
-          <p className="hidden xs:block text-[12px] text-gray-400 dark:text-gray-500 flex-1 truncate min-w-0">
-            {v.designation || <span className="italic">No purpose</span>}
-          </p>
+            {/* Purpose */}
+            <p className="hidden sm:block text-[12px] text-gray-400 dark:text-gray-500 flex-1 truncate min-w-0 italic">
+              {v.designation || "No purpose"}
+            </p>
 
-          {/* Visiting user */}
-          <div className="hidden sm:flex items-center gap-1.5 text-[12px] font-semibold text-blue-600 dark:text-blue-400 w-36 shrink-0 truncate">
-            <Home className="h-3 w-3 shrink-0 text-blue-400" />
-            <span className="truncate">{v.visitingName}{v.visitingFlat ? ` (${v.visitingFlat})` : ""}</span>
+            {/* Visiting user */}
+            <div className="hidden md:flex items-center gap-1.5 text-[12px] font-semibold text-blue-600 dark:text-blue-400 w-36 shrink-0">
+              <Home className="h-3 w-3 shrink-0 text-blue-400" />
+              <span className="truncate">{v.visitingName}{v.visitingFlat ? ` (${v.visitingFlat})` : ""}</span>
+            </div>
+
+            {/* In time */}
+            <span className="hidden lg:flex items-center gap-1 text-[11px] text-gray-400 shrink-0">
+              <Clock className="h-3 w-3" />{fmtTime(v.inTime)}
+            </span>
+
+            {/* Status pill */}
+            <span className={cn(
+              "hidden md:inline-flex shrink-0 items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full border",
+              isActive
+                ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                : "bg-gray-100 dark:bg-white/[0.06] border-gray-200 dark:border-white/[0.08] text-gray-500 dark:text-gray-400"
+            )}>
+              {isActive
+                ? <><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Active</>
+                : <><span className="h-1.5 w-1.5 rounded-full bg-gray-400" />Out</>}
+            </span>
+
+            {/* Chevron — inside trigger, part of the clickable expand area */}
+            <ChevronDown className="h-4 w-4 text-gray-400 ml-auto shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
           </div>
+        </AccordionTrigger>
 
-          {/* In time */}
-          <span className="hidden lg:flex items-center gap-1 text-[11px] text-gray-400 shrink-0">
-            <Clock className="h-3 w-3" />{fmtTime(v.inTime)}
-          </span>
-
-          {/* Status pill */}
-          <span className={cn(
-            "hidden md:inline-flex shrink-0 items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full border",
-            isActive
-              ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-white/[0.06] border-gray-200 dark:border-white/[0.08] text-gray-500 dark:text-gray-400"
-          )}>
-            {isActive
-              ? <><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Active</>
-              : <><span className="h-1.5 w-1.5 rounded-full bg-gray-400" />Out</>}
-          </span>
-
-          {/* Out button + chevron — stop propagation so click doesn't toggle accordion */}
-          <div className="flex items-center gap-2 ml-auto shrink-0"
-            onClick={e => e.stopPropagation()}>
-            {isActive && (
-              <Button size="sm" onClick={onOut}
-                className="h-7 px-2.5 text-[11.5px] font-bold rounded-lg gap-1 bg-rose-600 hover:bg-rose-500 text-white shadow-sm">
-                <LogOut className="h-3 w-3" />Out
-              </Button>
-            )}
-            {/* Manual chevron since we hid the default one */}
-            <ChevronDown
-              className="h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180"
-              onClick={() => {}} // trigger handled by AccordionTrigger itself
-            />
-          </div>
+        {/* Right: action buttons — SIBLING to trigger, NOT nested inside it */}
+        <div className="flex items-center gap-2 px-3 shrink-0">
+          {isActive && (
+            <button
+              onClick={onOut}
+              className="flex items-center gap-1 h-7 px-2.5 text-[11.5px] font-bold rounded-lg
+                bg-rose-600 hover:bg-rose-500 text-white shadow-sm transition-colors">
+              <LogOut className="h-3 w-3" />Out
+            </button>
+          )}
         </div>
-      </AccordionTrigger>
+      </div>
 
       {/* ── EXPANDED DETAILS ──────────────────────────────────────────── */}
       <AccordionContent className="px-4 pb-4">
