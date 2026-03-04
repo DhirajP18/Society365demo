@@ -1,7 +1,18 @@
 export default function AppFooter() {
   return (
     <footer className="h-10 shrink-0 border-t border-border bg-background/80 text-xs sm:text-sm text-muted-foreground flex items-center justify-center">
-      &copy; 2026 Society 365
+      &copy; 2026 Society 365. All rights reserved. Powered by{" "}
+      
+      <a
+        href="https://nexspiretechnologies.in"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="ml-1 font-medium text-muted-foreground hover:text-blue-600 transition-colors duration-200"
+      >
+        Nexspire Technologies
+      </a>
+      
+      .
     </footer>
-  )
+  );
 }

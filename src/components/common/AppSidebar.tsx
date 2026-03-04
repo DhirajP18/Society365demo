@@ -381,7 +381,7 @@ export default function AppSidebar() {
       {(!isCollapsed || isMobile) && (
         <div className="shrink-0 border-t border-border px-4 py-3">
           <p className="text-[11px] text-muted-foreground/50 text-center">
-            © {new Date().getFullYear()} AMS System
+            © {new Date().getFullYear()} Society 365. All rights reserved.
           </p>
         </div>
       )}

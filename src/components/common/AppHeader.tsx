@@ -398,7 +398,7 @@ export default function AppHeader() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-100 dark:bg-white/[0.06] mx-1" />
-              <DropdownMenuItem onClick={() => router.push("/profile")}
+              <DropdownMenuItem onClick={() => router.push("/myprofile")}
                 className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] cursor-pointer text-gray-700 dark:text-gray-300 focus:bg-gray-50 dark:focus:bg-white/[0.04]">
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 shrink-0">
                   <User className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
