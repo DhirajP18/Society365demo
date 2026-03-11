@@ -41,6 +41,8 @@ interface DuePeriod {
 }
 type Res<T=unknown> = {isSuccess?:boolean;resMsg?:string;result?:T}
 
+const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? ""
+
 const fmt = (d?:string|null) => {
   if (!d) return "-"
   const dt = new Date(d)
@@ -236,10 +238,11 @@ function DueListItem({
 
   const payNow = async () => {
     if (paid) return
+    if (!RAZORPAY_KEY_ID) return toast.error("Razorpay key not configured. Set NEXT_PUBLIC_RAZORPAY_KEY_ID.")
     setPaying(true)
     try {
       new window.Razorpay({
-        key: "rzp_test_RtMLEoBroA8R8P",
+        key: RAZORPAY_KEY_ID,
         amount: Math.round(live.totalPayable * 100),
         currency: "INR",
         name: APP_NAME,
@@ -383,6 +386,7 @@ export default function UserPayMaintenancePage() {
   }
 
   useEffect(() => {
+    // Ensure Razorpay Checkout script is loaded (old flow: open in-page modal).
     if (!document.querySelector('script[src*="razorpay"]')) {
       const s = document.createElement("script")
       s.src = "https://checkout.razorpay.com/v1/checkout.js"
@@ -442,12 +446,13 @@ export default function UserPayMaintenancePage() {
   const paySelected = async (payAllFiltered = false) => {
     const target = payAllFiltered ? selectableFiltered : selectedFiltered
     if (target.length === 0) return toast.error("Select at least one pending entry")
+    if (!RAZORPAY_KEY_ID) return toast.error("Razorpay key not configured. Set NEXT_PUBLIC_RAZORPAY_KEY_ID.")
 
     const amount = target.reduce((a,d)=>a+d.totalPayable,0)
     setBulkPaying(true)
     try {
       new window.Razorpay({
-        key: "rzp_test_RtMLEoBroA8R8P",
+        key: RAZORPAY_KEY_ID,
         amount: Math.round(amount * 100),
         currency: "INR",
         name: APP_NAME,

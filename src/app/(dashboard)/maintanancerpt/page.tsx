@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import api from "@/lib/api"
 import { getApiMessage } from "@/lib/getApiMessage"
 import { toast } from "sonner"
@@ -10,9 +10,8 @@ import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
 import {
   RefreshCw, Search, Download, Printer, FileSpreadsheet,
-  IndianRupee, Calendar, Users, CheckCircle2, Clock,
   ChevronLeft, ChevronRight, X, FileText, Filter,
-  TrendingUp, AlertTriangle, Eye,
+  TrendingUp, Eye,
 } from "lucide-react"
 
 type JsPdfWithAutoTable = jsPDF & { lastAutoTable?: { finalY: number } }
@@ -30,7 +29,6 @@ type Res<T=unknown>={isSuccess?:boolean;resMsg?:string;result?:T}
 const MONTHS=["","January","February","March","April","May","June","July","August","September","October","November","December"]
 const CY=new Date().getFullYear()
 const YEARS=[CY-2,CY-1,CY,CY+1]
-const PAGE_SIZE=15
 
 const fmt=(d?:string|null)=>{
   if(!d)return"—"
@@ -153,6 +151,7 @@ export default function AdminReportPage() {
   const [loading,   setLoading]   = useState(true)
   const [search,    setSearch]    = useState("")
   const [page,      setPage]      = useState(1)
+  const [pageSize,  setPageSize]  = useState(15)
   const [fMonth,    setFMonth]    = useState("")
   const [fYear,     setFYear]     = useState(String(CY))
   const [fStatus,   setFStatus]   = useState("")
@@ -177,14 +176,24 @@ export default function AdminReportPage() {
     finally{setLoading(false)}
   }
 
+  // Intentional: initial load once; subsequent loads via "Generate" button.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(()=>{load()},[])
 
-  const filtered=payments.filter(p=>{
-    const q=search.trim().toLowerCase()
-    return !q||`${p.userName} ${p.flatNo} ${p.periodTitle} ${p.receiptNumber}`.toLowerCase().includes(q)
-  })
-  const pages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE))
-  const paged=filtered.slice((page-1)*PAGE_SIZE,page*PAGE_SIZE)
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return payments
+    return payments.filter(p =>
+      `${p.userName} ${p.flatNo} ${p.periodTitle} ${p.receiptNumber}`.toLowerCase().includes(q)
+    )
+  }, [payments, search])
+
+  const pages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const paged = useMemo(() => filtered.slice((page - 1) * pageSize, page * pageSize), [filtered, page, pageSize])
+  const from = filtered.length === 0 ? 0 : (page - 1) * pageSize + 1
+  const to = Math.min(page * pageSize, filtered.length)
+
+  useEffect(() => { if (page > pages) setPage(pages) }, [page, pages])
 
   // Summary stats
   const paidList    = payments.filter(p=>p.paymentStatus==="Paid")
@@ -300,7 +309,7 @@ export default function AdminReportPage() {
           <div className="p-4 space-y-2">
             {/* Mobile result count */}
             <p className="text-[11px] text-gray-400 dark:text-gray-500">
-              Showing <b className="text-gray-700 dark:text-gray-300">{paged.length}</b> of <b className="text-gray-700 dark:text-gray-300">{filtered.length}</b> records
+              Showing <b className="text-gray-700 dark:text-gray-300">{from}</b>â€“<b className="text-gray-700 dark:text-gray-300">{to}</b> of <b className="text-gray-700 dark:text-gray-300">{filtered.length}</b> records
             </p>
 
             {/* Desktop table */}
@@ -403,13 +412,22 @@ export default function AdminReportPage() {
       </div>
 
       {/* Pagination */}
-      {filtered.length > PAGE_SIZE&&(
+      {filtered.length > pageSize&&(
         <div className="bg-white dark:bg-[#0d1017] border-t border-gray-100 dark:border-white/[0.05] px-4 sm:px-6 py-3 flex items-center justify-between gap-2 shrink-0">
           <p className="text-[11px] text-gray-400">
             Page <b className="text-gray-700 dark:text-gray-300">{page}</b> / <b className="text-gray-700 dark:text-gray-300">{pages}</b>
-            <span className="ml-2 text-gray-300 dark:text-gray-600">({filtered.length} records)</span>
+            <span className="ml-2 text-gray-300 dark:text-gray-600">({from}â€“{to} of {filtered.length})</span>
           </p>
           <div className="flex items-center gap-1">
+            <select
+              value={String(pageSize)}
+              onChange={(e)=>{setPageSize(Number(e.target.value));setPage(1)}}
+              className="h-7 px-2 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-white dark:bg-transparent text-[11px] text-gray-600 dark:text-gray-300 outline-none mr-1"
+              aria-label="Rows per page"
+              title="Rows per page"
+            >
+              {[10,15,25,50,100].map(n=><option key={n} value={String(n)}>{n}/page</option>)}
+            </select>
             <Button size="sm" variant="outline" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}
               className="h-7 w-7 p-0 rounded-lg border-gray-200 dark:border-white/[0.08] bg-white dark:bg-transparent text-gray-500 disabled:opacity-40">
               <ChevronLeft className="h-3.5 w-3.5"/>
