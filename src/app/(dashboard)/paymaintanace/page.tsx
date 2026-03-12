@@ -54,6 +54,21 @@ const fmtTime = (d?:string|null) => {
   return isNaN(dt.getTime()) ? "-" : dt.toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})
 }
 const isExpenseOnly = (d: DuePeriod) => d.fixedAmount <= 0 && d.extraAmount > 0
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+const highlightText = (text: string, query: string) => {
+  const q = query.trim()
+  if (!q) return text
+  const parts = text.split(new RegExp(`(${escapeRegExp(q)})`, "gi"))
+  return parts.map((part, i) =>
+    part.toLowerCase() === q.toLowerCase()
+      ? (
+        <mark key={`${part}-${i}`} className="bg-yellow-200 text-gray-900 px-0.5 rounded-sm">
+          {part}
+        </mark>
+      )
+      : <span key={`${part}-${i}`}>{part}</span>
+  )
+}
 
 /** Popover with Show & Download actions for a receipt */
 function ReceiptActions({ url, label = "Receipt" }: { url: string; label?: string }) {
@@ -211,13 +226,14 @@ function generateUserReceipt(p: DuePeriod) {
 }
 
 function DueListItem({
-  due, onPaid, selectable, selected, onToggleSelect,
+  due, onPaid, selectable, selected, onToggleSelect, highlight,
 }: {
   due: DuePeriod
   onPaid: (pid:number)=>void
   selectable?: boolean
   selected?: boolean
   onToggleSelect?: (checked: boolean) => void
+  highlight?: string
 }) {
   const [live, setLive] = useState(due)
   const [paying, setPaying] = useState(false)
@@ -288,7 +304,9 @@ function DueListItem({
                     aria-label={`Select ${live.title}`}
                   />
                 )}
-                <p className="text-[13px] sm:text-[14px] font-bold text-gray-900 dark:text-white truncate">{live.title}</p>
+                <p className="text-[13px] sm:text-[14px] font-bold text-gray-900 dark:text-white truncate">
+                  {highlightText(live.title, highlight ?? "")}
+                </p>
                 {expenseBill&&<span className="text-[9px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/30">Expense</span>}
                 <span className={cn("text-[9px] px-2 py-0.5 rounded-full border",
                   paid?"bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30":
@@ -317,7 +335,7 @@ function DueListItem({
 
         {live.workDescription&&(
           <div className="rounded-lg border border-gray-200 dark:border-white/[0.08] px-3 py-2 text-[12px] text-gray-600 dark:text-gray-300">
-            {live.workDescription}
+            {highlightText(live.workDescription, highlight ?? "")}
           </div>
         )}
 
@@ -328,7 +346,7 @@ function DueListItem({
               const rUrl = resolveReceiptUrl(e.receiptUrl)
               return (
                 <div key={e.id} className="flex items-center justify-between gap-2 border border-gray-200 dark:border-white/[0.08] rounded-lg px-3 py-2 text-[12px]">
-                  <span className="text-gray-700 dark:text-gray-300">{e.description}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{highlightText(e.description, highlight ?? "")}</span>
                   <div className="flex items-center gap-3">
                     {/* ── Receipt Show/Download popover ── */}
                     {rUrl && <ReceiptActions url={rUrl} />}
@@ -506,8 +524,8 @@ export default function UserPayMaintenancePage() {
           </Button>
         </div>
 
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
-          <div className="lg:col-span-2 relative">
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
+          <div className="lg:col-span-2 lg:max-w-[320px] relative">
             <Search className="h-3.5 w-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2"/>
             <input
               value={query}
@@ -524,11 +542,26 @@ export default function UserPayMaintenancePage() {
             <option value="all">All Years</option>
             {yearOptions.map(y=><option key={y} value={String(y)}>{y}</option>)}
           </select>
-          <select value={kind} onChange={e=>setKind(e.target.value as "all"|"maintenance"|"expense")} className="h-9 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-white dark:bg-[#121622] text-[12px] px-2 text-gray-700 dark:text-gray-200">
-            <option value="all">All Types</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="expense">Expense Bills</option>
-          </select>
+          <div className="lg:col-span-2 h-9 flex items-center gap-1 rounded-lg border border-gray-200 dark:border-white/[0.08] bg-white dark:bg-[#121622] px-1">
+            {[
+              {k:"all", label:"All"},
+              {k:"maintenance", label:"Monthly"},
+              {k:"expense", label:"Expense"},
+            ].map(t=>(
+              <button
+                key={t.k}
+                onClick={()=>setKind(t.k as "all"|"maintenance"|"expense")}
+                className={cn(
+                  "h-7 px-3 rounded-md text-[11px] font-semibold transition-colors",
+                  kind===t.k
+                    ? "bg-teal-600 text-white"
+                    : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
           <Button variant="outline" className="h-9 rounded-lg text-[12px]" onClick={()=>{setQuery("");setMonth("all");setYear("all");setKind("all")}}>Clear</Button>
         </div>
 
@@ -579,6 +612,7 @@ export default function UserPayMaintenancePage() {
                   selectable={tab==="pending" && d.paymentStatus !== "Paid"}
                   selected={selectedIds.has(d.periodId)}
                   onToggleSelect={(checked)=>toggleSelect(d.periodId, checked)}
+                  highlight={query}
                 />
               ))}
             </Accordion>
